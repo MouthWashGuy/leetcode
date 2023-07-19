@@ -6,9 +6,9 @@ import heapq
 # data structures
 class HeapNode():
 
-       def __init__(self, key):
+       def __init__(self, key, count):
               self.key = key
-              self.count = 0
+              self.count = count
        
        def __lt__(self, other):
               return self.count < other.count
@@ -33,41 +33,37 @@ class HeapNode():
 # test inputs
 test1 = [1,1,1,2,2,3]
 test2 = [3,3,3,1,1,2]
-test3 = [1,1,1,2,3,3,3,3,3,3,3,3,3,3,0]
+test3 = [1,1,1,2,2,3,3,3,3,3,3,3,3,3,3,0]
 test4 = [2,2,2,1,3,3]
 
 # solution here
 def solution(nums, k):
 
-      # first we do one pass over the array to count the occurences of each element
-      count_map = {}
-      for num in nums:
-             
-             # if we havent seen it before
-             if num not in count_map:
-                    count_map[num] = HeapNode(num)
-                    
-             count_map[num].count -= 1
+       # first we have to build a map of each number, to its associated frequency, we could use an array to do this, but that would require knowing the max of the array nums
+       # hence a hashmap can be used instead
+       count_map = {}
+       for num in nums:
+              count_map[num] = count_map.get(num, 0) + 1 # using get here saves us some time, as it allows us to use 0 as a default value whenever we see a number for this first time
 
-       # Theres actually a better version of the algorithm where we can maintain a heap of size k, and then iterate over the elements in the dictionary, adding them to the heap.
-       # with a min heap, the least frequent element is always the root of the heap, hence, by comparing every elment to the root, we can know quickly if that element should enter the heap or not
-       # TODO
+       # now the magic happens, since we have a nice map of numbers:frequency we can use a heap to gather up the most frequent numbers
+       # this is achieved by using a heap of size k, by using a minheap, the least frequent element is always the root of the heap
+       # hence, by iterating over the map, and comparing the count of the ith item to the heaps root, we can know if that item belong in the heap at all
+       # since everything below the root as a greater count than it, we do not need to bother with further comparisons.
+       heap = []
 
-      # this should populate our hashmap nicely
-      dict_items = list(count_map.values())
-      heapq.heapify(dict_items)
-      
-      # now we return k items
-      output = []
-      for i in range(k):
-             output.append(heapq.heappop(dict_items).key)
+       for num, count in list(count_map.items()):
 
-      return output
-             
+              # insert simply
+              if len(heap) < k:
+                     heapq.heappush(heap, HeapNode(num, count))
+              elif count > heap[0].count:
+                     heapq.heapreplace(heap, HeapNode(num, count))
 
+       return [node.key for node in heap]
+              
 # testing
 if __name__ == "__main__":
-       print(solution(test3, 2))
+       print(solution(test3, 3))
        print(solution(test4, 2))
        print(solution(test2, 2))
        
